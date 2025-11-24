@@ -1,112 +1,184 @@
 const express = require('express');
+const cors = require('cors');
+
+const { Usuario, Producto, Orden } = require('./models');
+
 const app = express();
+
+app.use(cors());
 app.use(express.json());
 
-// ====================================
-//   CRUD USUARIOS
-// ====================================
+// ========================================================
+// USUARIOS
+// ========================================================
 
-// Obtener todos
-app.get('/usuarios', (req, res) => {
+app.get('/usuarios', async (req, res) => {
+  const usuarios = await Usuario.findAll();
   res.json(usuarios);
 });
 
-// Obtener 1
-app.get('/usuarios/:id', (req, res) => {
-  const u = usuarios.find(x => x.id == req.params.id);
-  u ? res.json(u) : res.status(404).json({ error: "No encontrado" });
+app.get('/usuarios/:id', async (req, res) => {
+  const usuario = await Usuario.findByPk(req.params.id);
+  usuario ? res.json(usuario) : res.status(404).json({ error: "Usuario no encontrado" });
 });
 
-// Crear
-app.post('/usuarios', (req, res) => {
-  const nuevo = { id: Date.now(), ...req.body };
-  usuarios.push(nuevo);
-  res.json(nuevo);
+app.post('/usuarios', async (req, res) => {
+  try {
+    const nuevo = await Usuario.create(req.body);
+    res.json(nuevo);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
-// Actualizar
-app.put('/usuarios/:id', (req, res) => {
-  const index = usuarios.findIndex(x => x.id == req.params.id);
-  if (index < 0) return res.status(404).json({ error: "No encontrado" });
+app.put('/usuarios/:id', async (req, res) => {
+  const usuario = await Usuario.findByPk(req.params.id);
+  if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
 
-  usuarios[index] = { ...usuarios[index], ...req.body };
-  res.json(usuarios[index]);
+  await usuario.update(req.body);
+  res.json(usuario);
 });
 
-// Eliminar
-app.delete('/usuarios/:id', (req, res) => {
-  usuarios = usuarios.filter(x => x.id != req.params.id);
+app.delete('/usuarios/:id', async (req, res) => {
+  const usuario = await Usuario.findByPk(req.params.id);
+  if (!usuario) return res.status(404).json({ error: "Usuario no encontrado" });
+
+  await usuario.destroy();
   res.json({ mensaje: "Usuario eliminado" });
 });
 
+// ========================================================
+// LOGIN
+// ========================================================
 
-// ====================================
-//   CRUD PRODUCTOS
-// ====================================
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-app.get('/productos', (req, res) => {
+    if (!email || !password)
+      return res.status(400).json({ error: "Faltan datos" });
+
+    const usuario = await Usuario.findOne({ where: { email, password } });
+
+    if (!usuario)
+      return res.status(401).json({ error: "Credenciales inválidas" });
+
+    res.json({
+      id: usuario.id,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      email: usuario.email,
+      role: usuario.role
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error en el servidor" });
+  }
+});
+
+// ========================================================
+// PRODUCTOS
+// ========================================================
+
+app.get('/productos', async (req, res) => {
+  const productos = await Producto.findAll();
   res.json(productos);
 });
 
-app.get('/productos/:id', (req, res) => {
-  const p = productos.find(x => x.id == req.params.id);
-  p ? res.json(p) : res.status(404).json({ error: "No encontrado" });
+app.get('/productos/:id', async (req, res) => {
+  const producto = await Producto.findByPk(req.params.id);
+  producto ? res.json(producto) : res.status(404).json({ error: "Producto no encontrado" });
 });
 
-app.post('/productos', (req, res) => {
-  const nuevo = { id: Date.now(), ...req.body };
-  productos.push(nuevo);
-  res.json(nuevo);
+app.post('/productos', async (req, res) => {
+  try {
+    const nuevo = await Producto.create(req.body);
+    res.json(nuevo);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
-app.put('/productos/:id', (req, res) => {
-  const index = productos.findIndex(x => x.id == req.params.id);
-  if (index < 0) return res.status(404).json({ error: "No encontrado" });
+app.put('/productos/:id', async (req, res) => {
+  const producto = await Producto.findByPk(req.params.id);
+  if (!producto) return res.status(404).json({ error: "Producto no encontrado" });
 
-  productos[index] = { ...productos[index], ...req.body };
-  res.json(productos[index]);
+  await producto.update(req.body);
+  res.json(producto);
 });
 
-app.delete('/productos/:id', (req, res) => {
-  productos = productos.filter(x => x.id != req.params.id);
+app.delete('/productos/:id', async (req, res) => {
+  const producto = await Producto.findByPk(req.params.id);
+  if (!producto) return res.status(404).json({ error: "Producto no encontrado" });
+
+  await producto.destroy();
   res.json({ mensaje: "Producto eliminado" });
 });
 
+// ========================================================
+// ORDENES — IMPORTANTE: USANDO ALIAS
+// ========================================================
 
-// ====================================
-//   CRUD ORDENES
-// ====================================
-
-app.get('/ordenes', (req, res) => {
-  res.json(ordenes);
+app.get('/ordenes', async (req, res) => {
+  try {
+    const ordenes = await Orden.findAll({
+      include: [
+        { model: Usuario, as: 'usuario' },
+        { model: Producto, as: 'producto' }
+      ]
+    });
+    res.json(ordenes);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo órdenes" });
+  }
 });
 
-app.get('/ordenes/:id', (req, res) => {
-  const o = ordenes.find(x => x.id == req.params.id);
-  o ? res.json(o) : res.status(404).json({ error: "No encontrado" });
+app.get('/ordenes/:id', async (req, res) => {
+  try {
+    const orden = await Orden.findByPk(req.params.id, {
+      include: [
+        { model: Usuario, as: 'usuario' },
+        { model: Producto, as: 'producto' }
+      ]
+    });
+
+    orden ? res.json(orden) : res.status(404).json({ error: "Orden no encontrada" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error obteniendo la orden" });
+  }
 });
 
-app.post('/ordenes', (req, res) => {
-  const nueva = { id: Date.now(), ...req.body };
-  ordenes.push(nueva);
-  res.json(nueva);
+app.post('/ordenes', async (req, res) => {
+  try {
+    const nueva = await Orden.create(req.body);
+    res.json(nueva);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 });
 
-app.put('/ordenes/:id', (req, res) => {
-  const index = ordenes.findIndex(x => x.id == req.params.id);
-  if (index < 0) return res.status(404).json({ error: "No encontrado" });
+app.put('/ordenes/:id', async (req, res) => {
+  const orden = await Orden.findByPk(req.params.id);
+  if (!orden) return res.status(404).json({ error: "Orden no encontrada" });
 
-  ordenes[index] = { ...ordenes[index], ...req.body };
-  res.json(ordenes[index]);
+  await orden.update(req.body);
+  res.json(orden);
 });
 
-app.delete('/ordenes/:id', (req, res) => {
-  ordenes = ordenes.filter(x => x.id != req.params.id);
+app.delete('/ordenes/:id', async (req, res) => {
+  const orden = await Orden.findByPk(req.params.id);
+  if (!orden) return res.status(404).json({ error: "Orden no encontrada" });
+
+  await orden.destroy();
   res.json({ mensaje: "Orden eliminada" });
 });
 
+// ========================================================
+// SERVIDOR
+// ========================================================
 
-// ====================================
-//   SERVIDOR
-// ====================================
 app.listen(5000, () => console.log("Servidor ejecutándose en puerto 5000"));

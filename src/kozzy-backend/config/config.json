@@ -5,7 +5,7 @@
     "database": "kozzy_db",
     "host": "127.0.0.1",
     "dialect": "postgres",
-    "port": 5000
+    "port": 5432
   },
   "test": {
     "username": "postgres",
@@ -13,7 +13,7 @@
     "database": "kozzy_db_test",
     "host": "127.0.0.1",
     "dialect": "postgres",
-    "port": 5000
+    "port": 5432
   },
   "production": {
     "use_env_variable": "DATABASE_URL",
