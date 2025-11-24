@@ -58,10 +58,10 @@ export default function App() {
           <Route path="/cambiar-password" element={<CambiarPassword />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/productos" element={<AdminProductos />} />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/productos" element={<ProtectedRoute><AdminProductos /></ProtectedRoute>} />
           <Route path="/admin/usuarios" element={<ProtectedRoute><AdminUsuarios /></ProtectedRoute>} />
-          <Route path="/admin/categorias" element={<Categorias />} />
+          <Route path="/admin/categorias" element={<ProtectedRoute><Categorias /></ProtectedRoute>} />
           <Route path="/admin/ordenes" element={<ProtectedRoute><AdminOrdenes /></ProtectedRoute>} />
 
           <Route path="/pomodoro" element={<Pomodoro />} />
