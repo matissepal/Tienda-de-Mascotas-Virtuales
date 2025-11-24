@@ -14,27 +14,27 @@ export default function Register() {
   const navigate = useNavigate();
   const { register } = useUsuarios();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!form.nombre || !form.apellido || !form.email || !form.password) {
-      alert("Por favor completa todos los campos.");
-      return;
-    }
+  if (!form.nombre || !form.apellido || !form.email || !form.password) {
+    alert("Por favor completa todos los campos.");
+    return;
+  }
 
-    try {
-      register({
-        nombre: form.nombre.trim(),
-        apellido: form.apellido.trim(),
-        email: form.email.trim(),
-        password: form.password,
-      });
-      alert("¡Registro exitoso! Has sido logueado.");
-      setForm({ nombre: "", apellido: "", email: "", password: "" });
-      navigate("/mi-cuenta");
-    } catch (err) {
-      alert(err.message || "Error al registrarse");
-    }
+  try {
+    await register({
+      nombre: form.nombre.trim(),
+      apellido: form.apellido.trim(),
+      email: form.email.trim(),
+      password: form.password,
+    });
+    alert("¡Registro exitoso! Has sido logueado.");
+    setForm({ nombre: "", apellido: "", email: "", password: "" });
+    navigate("/mi-cuenta");
+  } catch (err) {
+    alert(err.message || "Error al registrarse");
+  }
   };
 
   return (

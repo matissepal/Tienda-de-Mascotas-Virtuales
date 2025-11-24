@@ -16,38 +16,44 @@ export default function Checkout() {
   });
   const [pago, setPago] = useState({ metodo: "qr", tarjeta: "" });
 
-  const total = carrito
-    .reduce((s, i) => s + i.precio * (i.cantidad || 1), 0)
-    .toFixed(2);
+  const totalNumber = carrito.reduce(
+  (s, i) => s + i.precio * (i.cantidad || 1),
+  0
+  );
+  const total = totalNumber.toFixed(2);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!usuarioLogueado) {
-      alert("Debes iniciar sesión para completar la compra");
-      navigate("/login");
-      return;
-    }
+  if (!usuarioLogueado) {
+    alert("Debes iniciar sesión para completar la compra");
+    navigate("/login");
+    return;
+  }
 
-    if (!envio.nombre || !envio.direccion || !envio.ciudad) {
-      alert("Completa todos los datos de envío");
-      return;
-    }
+  if (!envio.nombre || !envio.direccion || !envio.ciudad) {
+    alert("Completa todos los datos de envío");
+    return;
+  }
 
-    const order = {
-      usuarioId: usuarioLogueado.id,
-      items: carrito,
-      envio,
-      pago,
-      total,
-    };
-
-    const newOrder = addOrder(order); 
-    limpiarCarrito && limpiarCarrito(); 
-    alert(`Orden creada con éxito 🐾 (ID: ${newOrder.id})`);
-
-    navigate("/order-complete");
+  const order = {
+    usuarioId: usuarioLogueado.id,
+    items: carrito,
+    envio,
+    pago,
+    total: totalNumber,  // número para la BD
   };
+
+  try {
+    const newOrder = await addOrder(order);
+    limpiarCarrito && limpiarCarrito();
+    alert(`Orden creada con éxito 🐾 (ID: ${newOrder.id})`);
+    navigate("/order-complete");
+  } catch (err) {
+    alert(err.message || "No se pudo completar la orden");
+  }
+  };
+
 
   return (
     <section className="checkout">

@@ -8,18 +8,18 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useUsuarios();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    try {
-      const usuario = login({
-        email: form.email.trim(),
-        password: form.password,
-      });
-      alert(`¡Bienvenido, ${usuario.nombre || usuario.email}!`);
-      navigate("/mi-cuenta");
-    } catch (err) {
-      alert(err.message || "Credenciales inválidas");
-    }
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const usuario = await login({
+      email: form.email.trim(),
+      password: form.password,
+    });
+    alert(`¡Bienvenido, ${usuario.nombre || usuario.email}!`);
+    navigate("/mi-cuenta");
+  } catch (err) {
+    alert(err.message || "Credenciales inválidas");
+  }
   };
 
   return (
